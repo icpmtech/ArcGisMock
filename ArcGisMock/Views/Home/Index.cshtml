@@ -228,15 +228,16 @@
             if (responseAddress) {
                 // Prepare the data to be saved
                 const locationData = {
-                    "address": responseAddress.address,
-                    "postal": responseAddress.postal,
-                    "neighborhood": responseAddress.Neighborhood,
-                    "county": responseAddress.county,
-                    "region": responseAddress.region
+                    "cr984_address": responseAddress.address,
+                    "cr984_name": responseAddress.address,
+                    "cr984_postal": responseAddress.postal,
+                    "cr984_neighborhood": responseAddress.Neighborhood,
+                    "cr984_county": responseAddress.county,
+                    "cr984_region": responseAddress.region
                 };
 
                 // Power Pages API URL and table name
-                const dataverseApiUrl = "https://<your-instance-name>.api.crm.dynamics.com/api/data/v9.1/locationData";
+                const dataverseApiUrl = "https://org4afe3339.crm4.dynamics.com/api/data/v9.1/cr984_estacaos";
 
                 // OAuth access token (replace this with the actual method to get the token)
                 const accessToken = "<your-access-token>";
@@ -246,7 +247,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${accessToken}`
+                      
                     },
                     body: JSON.stringify(locationData)
                 })
