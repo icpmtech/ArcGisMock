@@ -287,6 +287,32 @@
             }
         }
 
+        // Listen for messages from the parent window
+        window.addEventListener("message", function (event) {
+            const message = event.data;
+
+            if (message && message.type === "updateMap" && message.data) {
+                const lon = message.data.lon;
+                const lat = message.data.lat;
+                const label = message.data.label || "New Location";
+
+                var point = {
+                    type: "point",
+                    longitude: lon,
+                    latitude: lat
+                };
+
+                // Update the point on the map
+                pointOnTheMap.geometry = point;
+                view.center = [lon, lat]; // Recenter the map to the new location
+
+                view.popup.open({
+                    title: label,
+                    location: point,
+                    content: `Location: ${lat}, ${lon}`
+                });
+            }
+        });
 
         function applyAll() {
             if (pointOnTheMap.geometry && pointOnTheMap.attributes && responseAddress) {
@@ -328,7 +354,7 @@
                 document.getElementById("popup-content").innerHTML = "Please click on the map to select a location.";
             }
         }
-
+    
     </script>
 </head>
 
@@ -337,6 +363,9 @@
     <div id="instruction">
       
     </div>
+    <div id="message"></div>
+   
+
 </body>
 
 </html>

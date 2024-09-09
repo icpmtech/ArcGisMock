@@ -14,32 +14,25 @@
             width: 100%;
         }
 
-        #instruction {
-            padding: 15px;
-            background: white;
-            color: black;
-            border: 5px solid gold;
-            font-family: sans-serif;
-            font-size: 1.2em;
-        }
+
 
         .popup-buttons {
             margin-top: 10px;
             text-align: center;
         }
 
-        .popup-buttons button {
-            margin: 5px;
-            padding: 10px;
-            font-size: 1em;
-            background-color: #ffc107;
-            border: none;
-            cursor: pointer;
-        }
+            .popup-buttons button {
+                margin: 5px;
+                padding: 10px;
+                font-size: 1em;
+                background-color: #ffc107;
+                border: none;
+                cursor: pointer;
+            }
 
-        .popup-buttons button:hover {
-            background-color: #e0a800;
-        }
+                .popup-buttons button:hover {
+                    background-color: #e0a800;
+                }
     </style>
 
     <link rel="stylesheet" href="https://js.arcgis.com/4.11/esri/css/main.css">
@@ -126,17 +119,17 @@
 
                 view.popup.open({
                     // Set the popup's title to the coordinates of the location
-                    title: "Coordinates: [" + longitude + ", " + latitude + "]",
+                    title: "Localização",
                     location: event.mapPoint, // Set the location of the popup to the clicked location
                     content: `
-                        <div id="popup-content">
-                            Loading address...
-                        </div>
-                        <div class="popup-buttons">
-                            <button onclick="applyGeographicPosition()">Aplicar Pos. Geográfica</button>
-                            <button onclick="applyLocation()">Aplicar Localização</button>
-                            <button onclick="applyAll()">Aplicar Tudo</button>
-                        </div>`
+                                <div id="popup-content">
+                                    Loading address...
+                                </div>
+                                <div class="popup-buttons">
+                                    <button onclick="applyGeographicPosition()">Aplicar Pos. Geográfica</button>
+                                    <button onclick="applyLocation()">Aplicar Localização</button>
+                                    <button onclick="applyAll()">Aplicar Tudo</button>
+                                </div>`
                 });
             });
 
@@ -154,16 +147,15 @@
                         };
                         // If an address is successfully found, show it in the popup's content
                         document.getElementById("popup-content").innerHTML = `
-                            <p><strong>Localização</strong></p>
-                            <p>Localização: ${response.address}</p>
-                            <p>Código postal: ${response.attributes.Postal}</p>
-                            <p>Freguesia: ${response.attributes.Neighborhood}</p>
-                            <p>Concelho: ${response.attributes.Subregion}</p>
-                            <p>Distrito: ${response.attributes.Region}</p>
-                            <p><strong>Posicionamento Geográfico</strong></p>
-                            <p>Coordenadas GMS: ${pointOnTheMap.attributes.gms.lat}, ${pointOnTheMap.attributes.gms.lon}</p>
-                            <p>Coordenadas decimais: ${pointOnTheMap.attributes.decimal.lat}, ${pointOnTheMap.attributes.decimal.lon}</p>
-                            <p>Cota do ponto: ${pointOnTheMap.attributes.elevation} metros.</p>`;
+                                                    <p><strong>Localização:</strong> ${response.address}</p>
+                                                    <p><strong>Código postal:</strong> ${response.attributes.Postal}</p>
+                                                    <p><strong>Freguesia:</strong> ${response.attributes.Neighborhood}</p>
+                                                    <p><strong>Concelho:</strong> ${response.attributes.Subregion}</p>
+                                                    <p><strong>Distrito:</strong> ${response.attributes.Region}</p>
+                                                    <p><strong>Posicionamento Geográfico</strong></p>
+                                                    <p><strong>Coordenadas GMS:</strong> ${pointOnTheMap.attributes.gms.lat}, ${pointOnTheMap.attributes.gms.lon}</p>
+                                                    <p><strong>Coordenadas decimais:</strong> ${pointOnTheMap.attributes.decimal.lat}, ${pointOnTheMap.attributes.decimal.lon}</p>
+                                                    <p><strong>Cota do ponto:</strong> ${pointOnTheMap.attributes.elevation} metros.</p>`;
                     })
                     .catch(function (error) {
                         // If the promise fails and no result is found, show a generic message
@@ -213,20 +205,25 @@
 
         function applyGeographicPosition() {
             if (pointOnTheMap.geometry && pointOnTheMap.attributes) {
+                const geographicPosition = {
+                    gms: pointOnTheMap.attributes.gms,
+                    decimal: pointOnTheMap.attributes.decimal,
+                    elevation: pointOnTheMap.attributes.elevation
+                };
+
                 document.getElementById("popup-content").innerHTML = `
-                    <p><strong>Posicionamento Geográfico</strong></p>
-                    <p>Coordenadas GMS: ${pointOnTheMap.attributes.gms.lat}, ${pointOnTheMap.attributes.gms.lon}</p>
-                    <p>Coordenadas decimais: ${pointOnTheMap.attributes.decimal.lat}, ${pointOnTheMap.attributes.decimal.lon}</p>
-                    <p>Cota do ponto: ${pointOnTheMap.attributes.elevation} metros.</p>`;
-                // Call the function to save the data to Power Pages
-                saveToPowerPages();
+                            <p><strong>Posicionamento Geográfico</strong></p>
+                                            <p><strong>Coordenadas GMS:</strong> ${geographicPosition.gms.lat}, ${geographicPosition.gms.lon}</p>
+                                            <p><strong>Coordenadas decimais:</strong> ${geographicPosition.decimal.lat}, ${geographicPosition.decimal.lon}</p>
+                                            <p><strong>Cota do ponto:</strong> ${geographicPosition.elevation} metros.</p>`;
+
                 // Send data to the parent window
                 window.parent.postMessage({ type: 'geographicPosition', data: geographicPosition }, '*');
-
             } else {
                 document.getElementById("popup-content").innerHTML = "Please click on the map to select a location.";
             }
         }
+
         function saveToPowerPages() {
             if (responseAddress) {
                 // Prepare the data to be saved
@@ -250,7 +247,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                      
+
                     },
                     body: JSON.stringify(locationData)
                 })
@@ -267,53 +264,125 @@
         }
         function applyLocation() {
             if (responseAddress) {
-                document.getElementById("popup-content").innerHTML = `
-                    <p><strong>Localização</strong></p>
-                    <p>Localização: ${responseAddress.address}</p>
-                    <p>Código postal: ${responseAddress.postal}</p>
-                    <p>Freguesia: ${responseAddress.Neighborhood}</p>
-                    <p>Concelho: ${responseAddress.county}</p>
-                    <p>Distrito: ${responseAddress.region}</p>`;
-                // Call the function to save the data to Power Pages
-                saveToPowerPages();
-                // Send data to the parent window
-                window.parent.postMessage({ type: 'geographicPosition', data: geographicPosition }, '*');
+                const locationData = {
+                    address: responseAddress.address,
+                    postal: responseAddress.postal,
+                    neighborhood: responseAddress.Neighborhood,
+                    county: responseAddress.county,
+                    region: responseAddress.region
+                };
 
+                document.getElementById("popup-content").innerHTML = `
+
+                                            <p><strong>Localização:</strong> ${locationData.address}</p>
+                                            <p><strong>Código postal:</strong> ${locationData.postal}</p>
+                                            <p><strong>Freguesia:</strong> ${locationData.neighborhood}</p>
+                                            <p><strong>Concelho:</strong> ${locationData.county}</p>
+                                            <p><strong>Distrito:</strong> ${locationData.region}</p>`;
+
+                // Send data to the parent window
+                window.parent.postMessage({ type: 'locationData', data: locationData }, '*');
             } else {
                 document.getElementById("popup-content").innerHTML = "Please click on the map to select a location.";
             }
         }
+
 
         function applyAll() {
             if (pointOnTheMap.geometry && pointOnTheMap.attributes && responseAddress) {
-                document.getElementById("popup-content").innerHTML = `
-                    <p><strong>Localização</strong></p>
-                    <p>Localização: ${responseAddress.address}</p>
-                    <p>Código postal: ${responseAddress.postal}</p>
-                    <p>Freguesia: ${responseAddress.Neighborhood}</p>
-                    <p>Concelho:
-                    <p>Distrito: ${responseAddress.region}</p>
-                    <p><strong>Posicionamento Geográfico</strong></p>
-                    <p>Coordenadas GMS: ${pointOnTheMap.attributes.gms.lat}, ${pointOnTheMap.attributes.gms.lon}</p>
-                    <p>Coordenadas decimais: ${pointOnTheMap.attributes.decimal.lat}, ${pointOnTheMap.attributes.decimal.lon}</p>
-                    <p>Cota do ponto: ${pointOnTheMap.attributes.elevation} metros.</p>`;
-                // Call the function to save the data to Power Pages
-                saveToPowerPages();
-                // Send data to the parent window
-                window.parent.postMessage({ type: 'geographicPosition', data: geographicPosition }, '*');
+                const geographicPosition = {
+                    gms: pointOnTheMap.attributes.gms,
+                    decimal: pointOnTheMap.attributes.decimal,
+                    elevation: pointOnTheMap.attributes.elevation
+                };
 
+                const locationData = {
+                    address: responseAddress.address,
+                    postal: responseAddress.postal,
+                    neighborhood: responseAddress.Neighborhood,
+                    county: responseAddress.county,
+                    region: responseAddress.region
+                };
+
+                document.getElementById("popup-content").innerHTML = `
+                            <p><strong>Localização</strong></p>
+                                            <p><strong>Localização:</strong> ${locationData.address}</p>
+                                            <p><strong>Código postal:</strong> ${locationData.postal}</p>
+                                            <p><strong>Freguesia:</strong> ${locationData.neighborhood}</p>
+                                            <p><strong>Concelho:</strong> ${locationData.county}</p>
+                                            <p><strong>Distrito:</strong> ${locationData.region}</p>
+                            <p><strong>Posicionamento Geográfico</strong></p>
+                                            <p><strong>Coordenadas GMS:</strong> ${geographicPosition.gms.lat}, ${geographicPosition.gms.lon}</p>
+                                            <p><strong>Coordenadas decimais:</strong> ${geographicPosition.decimal.lat}, ${geographicPosition.decimal.lon}</p>
+                                            <p><strong>Cota do ponto:</strong> ${geographicPosition.elevation} metros.</p>`;
+
+                // Send both geographic and location data to the parent window
+                window.parent.postMessage({
+                    type: 'allData',
+                    data: {
+                        geographicPosition,
+                        locationData
+                    }
+                }, '*');
             } else {
                 document.getElementById("popup-content").innerHTML = "Please click on the map to select a location.";
             }
         }
+        window.addEventListener("message", function (event) {
+            const message = event.data;
+
+            // Ensure that the message has the correct structure
+            if (message && message.type === "updateMap" && message.data) {
+                const lon = message.data.lon;
+                const lat = message.data.lat;
+                const radius = message.data.radius;
+                const label = message.data.label || "New Location";
+
+                // Update the map view with received coordinates
+                view.center = [lon, lat];
+                view.zoom = 14; // Adjust zoom level if necessary
+
+                // Create a point graphic at the received location
+                const newPoint = {
+                    type: "point",
+                    longitude: lon,
+                    latitude: lat
+                };
+
+                // Create a new marker graphic
+                const pointGraphic = new Graphic({
+                    geometry: newPoint,
+                    symbol: {
+                        type: "simple-marker",
+                        color: [255, 0, 0],  // red
+                        outline: {
+                            color: [255, 255, 255],
+                            width: 2
+                        }
+                    }
+                });
+
+                // Add the marker graphic to the map
+                view.graphics.add(pointGraphic);
+
+                // Optionally, show a popup with the label and radius
+                view.popup.open({
+                    title: label,
+                    content: `Longitude: ${lon}, Latitude: ${lat}, Radius: ${radius} km`,
+                    location: newPoint
+                });
+            }
+        });
     </script>
 </head>
 
 <body>
     <div id="viewDiv"></div>
     <div id="instruction">
-        Click on the map to retrieve coordinates and address
     </div>
+    <div id="message"></div>
+
+
 </body>
 
 </html>
