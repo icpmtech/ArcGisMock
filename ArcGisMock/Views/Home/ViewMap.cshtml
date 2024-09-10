@@ -287,6 +287,28 @@
             }
         }
 
+        // Listen for messages from the parent window
+        window.addEventListener("message", function (event) {
+            const message = event.data;
+
+            if (message && message.type === "updateMap" && message.data) {
+                const lon = message.data.lon;
+                const lat = message.data.lat;
+                const label = message.data.label || "New Location";
+
+                var point = {
+                    type: "point",
+                    longitude: lon,
+                    latitude: lat
+                };
+
+                // Update the point on the map
+                pointOnTheMap.geometry = point;
+                view.center = [lon, lat]; // Recenter the map to the new location
+
+                
+            }
+        });
 
         function applyAll() {
             if (pointOnTheMap.geometry && pointOnTheMap.attributes && responseAddress) {
@@ -328,51 +350,7 @@
                 document.getElementById("popup-content").innerHTML = "Please click on the map to select a location.";
             }
         }
-        window.addEventListener("message", function (event) {
-            const message = event.data;
 
-            // Ensure that the message has the correct structure
-            if (message && message.type === "updateMap" && message.data) {
-                const lon = message.data.lon;
-                const lat = message.data.lat;
-                const radius = message.data.radius;
-                const label = message.data.label || "New Location";
-
-                // Update the map view with received coordinates
-                view.center = [lon, lat];
-                view.zoom = 14; // Adjust zoom level if necessary
-
-                // Create a point graphic at the received location
-                const newPoint = {
-                    type: "point",
-                    longitude: lon,
-                    latitude: lat
-                };
-
-                // Create a new marker graphic
-                const pointGraphic = new Graphic({
-                    geometry: newPoint,
-                    symbol: {
-                        type: "simple-marker",
-                        color: [255, 0, 0],  // redadd
-                        outline: {
-                            color: [255, 255, 255],
-                            width: 2
-                        }
-                    }
-                });
-
-                // Add the marker graphic to the map
-                view.graphics.add(pointGraphic);
-
-                // Optionally, show a popup with the label and radius
-                view.popup.open({
-                    title: label,
-                    content: `Longitude: ${lon}, Latitude: ${lat}, Radius: ${radius} km`,
-                    location: newPoint
-                });
-            }
-        });
     </script>
 </head>
 
