@@ -39,6 +39,7 @@
     <script src="https://js.arcgis.com/4.11/"></script>
 
     <script>
+
         var locatorTask, view, pointOnTheMap, responseAddress, elevationServiceUrl = "https://elevation.arcgis.com/arcgis/rest/services/WorldElevation/Terrain/ImageServer";
 
         require([
@@ -78,12 +79,9 @@
                 }
             };
 
-            const search = new Search({  //Add Search widget
-                view: view
-            });
+          
 
-            view.ui.add(search, "top-right"); //Add to the map
-
+            
             //create a Graphic without geometry - this will be set later
             pointOnTheMap = new Graphic({
                 symbol: simpleMarkerSymbol
@@ -91,7 +89,82 @@
 
             // add the 'invisible' Graphic to the MapView
             view.graphics.add(pointOnTheMap);
+            /*******************************************************************
+             * This click event sets generic content on the popup not tied to
+             * a layer, graphic, or popupTemplate. The location of the point is
+             * used as input to a reverse geocode method and the resulting
+             * address is printed to the popup content.
+             *******************************************************************/
+            view.popup.autoOpenEnabled = false;
+          
+            function getGeocodeInfo(point) {
+                // Execute a reverse geocode using the clicked location
+                locatorTask
+                    .locationToAddress(point)
+                    .then(function (response) {
+                        responseAddress = {
+                            address: response.address,
+                            postal: response.attributes.Postal,
+                            city: response.attributes.City,
+                            county: response.attributes.Subregion,
+                            region: response.attributes.Region
+                        };
+                        // If an address is successfully found, show it in the popup's content
+                        document.getElementById("popup-content").innerHTML = `
+                                                    <p><strong>Localização:</strong> ${response.address}</p>
+                                                    <p><strong>Código postal:</strong> ${response.attributes.Postal}</p>
+                                                    <p><strong>Freguesia:</strong> ${response.attributes.Neighborhood}</p>
+                                                    <p><strong>Concelho:</strong> ${response.attributes.Subregion}</p>
+                                                    <p><strong>Distrito:</strong> ${response.attributes.Region}</p>
+                                                    <p><strong>Posicionamento Geográfico</strong></p>
+                                                    <p><strong>Coordenadas GMS:</strong> ${pointOnTheMap.attributes.gms.lat}, ${pointOnTheMap.attributes.gms.lon}</p>
+                                                    <p><strong>Coordenadas decimais:</strong> ${pointOnTheMap.attributes.decimal.lat}, ${pointOnTheMap.attributes.decimal.lon}</p>
+                                                    <p><strong>Cota do ponto:</strong> ${pointOnTheMap.attributes.elevation} metros.</p>`;
+                    })
+                    .catch(function (error) {
+                        // If the promise fails and no result is found, show a generic message
+                        responseAddress = null;
+                        document.getElementById("popup-content").innerHTML = "No address was found for this location";
+                    });
+            }
 
+            function getElevationInfo(point) {
+                fetch(`${elevationServiceUrl}/getElevation?geometry=${point.longitude},${point.latitude}&f=json`)
+                    .then(response => response.json())
+                    .then(data => {
+                        pointOnTheMap.attributes = {
+                            elevation: data.value,
+                            gms: toDMS(point.latitude, point.longitude),
+                            decimal: {
+                                lat: point.latitude,
+                                lon: point.longitude
+                            }
+                        };
+                    })
+                    .catch(error => {
+                        console.error("Error fetching elevation data: ", error);
+                    });
+            }
+
+            function toDMS(lat, lon) {
+                var latDMS = convertToDMS(lat);
+                var lonDMS = convertToDMS(lon);
+                return {
+                    lat: `${latDMS.deg}°${latDMS.min}'${latDMS.sec}"${lat >= 0 ? 'N' : 'S'}`,
+                    lon: `${lonDMS.deg}°${lonDMS.min}'${lonDMS.sec}"${lon >= 0 ? 'E' : 'W'}`
+                };
+            }
+
+            function convertToDMS(value) {
+                var valDeg = Math.floor(Math.abs(value));
+                var valMin = Math.floor((Math.abs(value) - valDeg) * 60);
+                var valSec = Math.round(((Math.abs(value) - valDeg) * 60 - valMin) * 60);
+                return {
+                    deg: valDeg,
+                    min: valMin,
+                    sec: valSec
+                };
+            }
         });
 
         function getGeocodeInfo(point) {
@@ -162,7 +235,7 @@
                 sec: valSec
             };
         }
-                });
+             
 
         function applyGeographicPosition() {
             if (pointOnTheMap.geometry && pointOnTheMap.attributes) {
